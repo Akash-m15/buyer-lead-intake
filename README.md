@@ -5,7 +5,7 @@
 ### **1. Clone the repository**
 
 ```bash
-git clone <repo-url>
+git clone "https://github.com/Akash-m15/buyer-lead-intake.git"
 cd buyer-leads
 ```
 
