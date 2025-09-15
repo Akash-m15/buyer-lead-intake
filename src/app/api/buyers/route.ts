@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { BuyerLeadType, buyerSchemaWithRefinements } from "@/lib/validation/buyer";
+import { BuyerLeadType, buyerSchemaWithRefinements } from "@/lib/zod/buyer";
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 
 

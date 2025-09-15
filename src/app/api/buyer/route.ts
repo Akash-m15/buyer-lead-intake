@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 import { getDiffs, normalizeFormData } from "@/lib/util";
-import { buyerSchemaWithRefinements } from "@/lib/validation/buyer";
+import { buyerSchemaWithRefinements } from "@/lib/zod/buyer";
 import { NextRequest, NextResponse } from "next/server";
 
 
