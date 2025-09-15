@@ -12,7 +12,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export default  function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null)
   const [session, setSession] = useState<any>(null)
 

@@ -1,7 +1,7 @@
 "use client";
 
 import LogoutButton from "@/components/LogOutButton";
-import { BuyerLeadType } from "@/lib/validation/buyer";
+import TableShimmerComponent from "@/components/TableShimmerComponent";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ export default function BuyerLeadsPage() {
   const pagesize = process.env.NEXT_PUBLIC_PAGESIZE || 10;
 
   const router = useRouter();
+
   const fetchBuyers = async () => {
     try {
       const res = await axios.get(`api/buyers/`, {
@@ -36,7 +37,6 @@ export default function BuyerLeadsPage() {
         alert("Unauthenticated");
         router.push("/signin");
       }
-      console.log(res.data);
       setBuyers(res.data.buyers);
       setTotalPages(res.data.totalPages);
     } catch (err) {
@@ -44,7 +44,7 @@ export default function BuyerLeadsPage() {
     }
   };
 
-  //Only use Debounce for query change
+  // debounce query
   useEffect(() => {
     const getData = setTimeout(() => {
       fetchBuyers();
@@ -52,227 +52,266 @@ export default function BuyerLeadsPage() {
     return () => clearTimeout(getData);
   }, [query]);
 
-  //Immediate for change in page or pagesize
+  // immediate on page/filter
   useEffect(() => {
     fetchBuyers();
   }, [page, pagesize, isFilterOpen]);
 
   const exportCSV = async () => {
-  try {
-    // Fetch all filtered buyers
-    const res = await axios.get("/api/buyers", {
-      params: {
-        query,
-        cities,
-        propertyTypes,
-        statuses,
-        timelines,
-        // no page or pagesize so fetch all records 
-        all: true,
-      },
-    });
+    try {
+      const res = await axios.get("/api/buyers", {
+        params: {
+          query,
+          cities,
+          propertyTypes,
+          statuses,
+          timelines,
+          all: true,
+        },
+      });
 
-    const buyersData = res.data.buyers;
+      const buyersData = res.data.buyers;
 
-    const headers = "fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags,status\n";
+      const headers =
+        "fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags,status\n";
 
-    const rows = buyersData
-      .map((b: any) =>
-        [
-          b.fullName,
-          b.email ?? "",
-          b.phone ?? "",
-          b.city,
-          b.propertyType,
-          b.bhk ?? "",
-          b.purpose,
-          b.budgetMin ?? "",
-          b.budgetMax ?? "",
-          b.timeline,
-          b.source,
-          b.notes ?? "",
-          (b.tags || []).join(","),
-          b.status
-        ]
-          .map((val) => `"${String(val).replace(/"/g, '""')}"`)
-          .join(",")
-      )
-      .join("\n");
+      const rows = buyersData
+        .map((b: any) =>
+          [
+            b.fullName,
+            b.email ?? "",
+            b.phone ?? "",
+            b.city,
+            b.propertyType,
+            b.bhk ?? "",
+            b.purpose,
+            b.budgetMin ?? "",
+            b.budgetMax ?? "",
+            b.timeline,
+            b.source,
+            b.notes ?? "",
+            (b.tags || []).join(","),
+            b.status,
+          ]
+            .map((val) => `"${String(val).replace(/"/g, '""')}"`)
+            .join(",")
+        )
+        .join("\n");
 
-    const csvContent = headers + rows;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "buyers.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+      const csvContent = headers + rows;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "buyers.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export CSV:", err);
+    }
+  };
 
-  } catch (err) {
-    console.error("Failed to export CSV:", err);
-  }
-};
-
+  // timeline display formatter
+  const formatTimeline = (t: string) => {
+    switch (t) {
+      case "ZERO_TO_THREE":
+        return "0-3m";
+      case "THREE_TO_SIX":
+        return "3-6m";
+      case "MORE_THAN_SIX":
+        return ">6m";
+      case "EXPLORING":
+        return "Exploring";
+      default:
+        return t;
+    }
+  };
 
   return (
-    <div>
-      <div className=" border bg-red-400 text-white right-0 mt--10">
-        <LogoutButton />
+    <div className="p-4 mb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-6 py-4 shadow-sm border-b border-gray-200">
+        <h1 className="text-xl font-bold">Lead-System</h1>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/create_lead"
+            className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+          >
+            Create Lead
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
-      <div>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={query}
-          onChange={(e) => {
-            setPage(1);
-            setQuery(e.target.value);
-          }}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm sm:w-1/3"
-        />
-      </div>
-      <div>
+
+      {/* Search + Filters + Export */}
+      <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center gap-4 ml-10">
+          <input
+            type="text"
+            placeholder="Search buyers..."
+            value={query}
+            onChange={(e) => {
+              setPage(1);
+              setQuery(e.target.value);
+            }}
+            className="w-80 rounded-md border border-gray-300 px-3 py-2 text-base text-center"
+          />
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="rounded-md bg-gray-700 px-3 py-2 text-sm text-white hover:bg-gray-900"
+          >
+            {isFilterOpen ? "Done" : "Show Filters"}
+          </button>
+        </div>
+
         <button
-          onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="mt-2 rounded-md bg-blue-500 px-3 py-1 text-sm text-white"
+          onClick={exportCSV}
+          className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600"
         >
-          {isFilterOpen ? "Hide Filters" : "Show Filters"}
+          Export CSV
         </button>
-        {isFilterOpen && (
-          <div>
-            <div>
-              <h3>City</h3>
-              {["Chandigarh", "Mohali", "Zirakpur", "Panchkula", "Other"].map(
-                (city) => (
-                  <label key={city} className="mr-2">
-                    <input
-                      type="checkbox"
-                      checked={cities.includes(city)}
-                      onChange={(e) => {
-                        setPage(1);
-                        if (e.target.checked) {
-                          setCities([...cities, city]);
-                        } else {
-                          setCities(cities.filter((c) => c !== city));
-                        }
-                      }}
-                    />
-                    <span className="ml-1">{city}</span>
-                  </label>
-                )
-              )}
-            </div>
-            <div>
-              <h3>City</h3>
-              {["Apartment", "Office", "Villa", "Plot", "Retail"].map(
-                (property) => (
-                  <label key={property} className="mr-2">
-                    <input
-                      type="checkbox"
-                      checked={propertyTypes.includes(property)}
-                      onChange={(e) => {
-                        setPage(1);
-                        if (e.target.checked) {
-                          setPropertyTypes([...propertyTypes, property]);
-                        } else {
-                          setPropertyTypes(
-                            propertyTypes.filter((c) => c !== property)
-                          );
-                        }
-                      }}
-                    />
-                    <span className="ml-1">{property}</span>
-                  </label>
-                )
-              )}
-            </div>
-            <button
-              onClick={() => {
-                setIsFilterOpen(false);
-              }}
-            >
-              Apply Filters
-            </button>
-          </div>
-        )}
       </div>
-      <div>
-        <table>
+
+      {/* Filters (collapsible with animation) */}
+      <div
+        className={`transition-all duration-500 overflow-hidden ${
+          isFilterOpen ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+          <div className="mb-2">
+            <h3 className="font-semibold mb-1">City</h3>
+            {["Chandigarh", "Mohali", "Zirakpur", "Panchkula", "Other"].map(
+              (city) => (
+                <label key={city} className="mr-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={cities.includes(city)}
+                    onChange={(e) => {
+                      setPage(1);
+                      if (e.target.checked) {
+                        setCities([...cities, city]);
+                      } else {
+                        setCities(cities.filter((c) => c !== city));
+                      }
+                    }}
+                  />
+                  <span className="ml-1">{city}</span>
+                </label>
+              )
+            )}
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-1">Property Type</h3>
+            {["Apartment", "Office", "Villa", "Plot", "Retail"].map(
+              (property) => (
+                <label key={property} className="mr-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={propertyTypes.includes(property)}
+                    onChange={(e) => {
+                      setPage(1);
+                      if (e.target.checked) {
+                        setPropertyTypes([...propertyTypes, property]);
+                      } else {
+                        setPropertyTypes(
+                          propertyTypes.filter((c) => c !== property)
+                        );
+                      }
+                    }}
+                  />
+                  <span className="ml-1">{property}</span>
+                </label>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-md overflow-x-auto mt-6">
+        <table className="w-full border-collapse text-base">
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>City</th>
-              <th>Property Type</th>
-              <th>Budget</th>
-              <th>TimeLine</th>
-              <th>Status</th>
-              <th>Updated at</th>
+            <tr className="bg-gray-100 text-left text-gray-700 border-b border-gray-200">
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Phone</th>
+              <th className="px-4 py-3">City</th>
+              <th className="px-4 py-3">Property Type</th>
+              <th className="px-4 py-3">Budget</th>
+              <th className="px-4 py-3">Timeline</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Updated At</th>
+              <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
           <tbody>
             {buyers.length === 0 ? (
-              <tr>
-                <td colSpan={8}></td>
-              </tr>
+                 <TableShimmerComponent />
             ) : (
-              buyers.map((buyer: any) => {
-                return (
-                  <tr key={buyer.id}>
-                    <td>{buyer.fullName}</td>
-                    <td>{buyer.phone}</td>
-                    <td>{buyer.city}</td>
-                    <td>{buyer.propertyType}</td>
-                    <td>
-                      {buyer.budgetMin} - {buyer.budgetMax}
-                    </td>
-                    <td>{buyer.timeline}</td>
-                    <td>{buyer.status}</td>
-                    <td>
-                      {new Date(buyer.updatedAt).toLocaleDateString("en-IN")}
-                    </td>
-                    <td>
-                      <Link
-                        href={`/buyers/${buyer.id}`}
-                        className="text-blue-500 hover:underline"
-                      >
-                        View / Edit
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })
+              buyers.map((buyer: any) => (
+                <tr
+                  key={buyer.id}
+                  className="border-b border-gray-200 last:border-0 hover:bg-gray-50"
+                >
+                  <td className="px-4 py-3 font-medium">{buyer.fullName}</td>
+                  <td className="px-4 py-3">{buyer.phone}</td>
+                  <td className="px-4 py-3">{buyer.city}</td>
+                  <td className="px-4 py-3">{buyer.propertyType}</td>
+                  <td className="px-4 py-3">
+                    {buyer.budgetMin} - {buyer.budgetMax}
+                  </td>
+                  <td className="px-4 py-3">{formatTimeline(buyer.timeline)}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        buyer.status === "New"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : buyer.status === "Closed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {buyer.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {new Date(buyer.updatedAt).toLocaleDateString("en-IN")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/buyers/${buyer.id}`}
+                      className="text-blue-500 hover:underline"
+                    >
+                      View / Edit
+                    </Link>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
-      <div className="mt-4 flex justify-center gap-2">
+
+      {/* Pagination */}
+      <div className="mt-6 flex justify-center gap-3">
         <button
           disabled={page == 1}
           onClick={() => setPage((page) => page - 1)}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
         >
           Prev
         </button>
-        <span className="px-2 py-1 text-sm text-gray-600">
+        <span className="px-2 py-2 text-sm text-gray-600">
           Page {page} of {totalPages}
         </span>
         <button
           disabled={page == totalPages}
           onClick={() => setPage((page) => page + 1)}
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
         >
           Next
         </button>
-
-        <div>
-          <button
-            onClick={exportCSV}
-            className="mt-2 rounded-md bg-green-500 px-3 py-1 text-sm text-white"
-          >
-            Export CSV
-          </button>
-        </div>
       </div>
     </div>
   );

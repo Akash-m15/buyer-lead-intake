@@ -75,10 +75,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
 
   const supabase = await createServerSupaBaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (!session?.user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { searchParams } = new URL(req.url);

@@ -1,28 +1,53 @@
 import axios from "axios";
 import BuyerClientComponent from "@/components/BuyerClientComponent";
-import BuyerHistory from "@/components/BuyerHistory"
+import BuyerHistory from "../../../components/BuyerHistory";
+import { prisma } from "@/lib/db";
+import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
+import { redirect, useRouter } from "next/navigation";
+import BuyerWrapper from "@/components/BuyerWrapper";
 
-export default async function getBuyerData({params} : {params: {id: string}})
-{
+export default async function getBuyerData({
+  params,
+}: {
+  params: { id: string };
+}) {
+  try {
+    
+    const supabase = await createServerSupaBaseClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return <div>You must be logged in to view this page.</div>;
+    }
+
   const id = (await params).id;
-  const res = await axios.get(`${process.env.NEXT_BASE_URL}/api/buyer/?id=${id}`);
-  if(res.status !== 200)
+  const buyer = await getBuyer(id);
+  if(!buyer)
   {
-    return <div>Failed to load buyer data</div>
+    return <><div>No Buyer Found</div></>
+
   }
-  const buyer = res.data.data;
-
-  const resHistory = await axios.get(`${process.env.NEXT_BASE_URL}/api/buyer/history/?id=${id}`);
-  if(resHistory.status !== 200)
-  {
-    return <div>Failed to load buyer history</div>
+    
+     return <BuyerWrapper initialBuyer={buyer} />
+    
+  } catch (err) {
+    console.log(err);
   }
-  const history = resHistory.data.data;
-
-
-  return 
-  <div>
-    <BuyerClientComponent buyer={buyer} />
-    <BuyerHistory history={history} />
-    </div>
 }
+
+
+async function getBuyer(id : string)
+{
+  const buyer = await prisma.buyer.findUnique({
+    where: { id: id },
+  });
+
+  if (!buyer) {
+    return null
+  }
+  return buyer
+}
+

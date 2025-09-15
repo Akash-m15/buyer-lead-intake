@@ -6,15 +6,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(req: NextRequest) {
+  console.log("REaching backend api endpoint")
 
   const supabase = await createServerSupaBaseClient()
  const { data: { user }, error } = await supabase.auth.getUser()
-
+console.log("User",user)
 if (error || !user) {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 }
-
-  // console.log("REaching backend api endpoint")
+  console.log("After auth check")
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
@@ -23,7 +23,7 @@ if (error || !user) {
   }
 
   try {
-    // console.log(id);
+    console.log(id);
     const buyer = await prisma.buyer.findUnique({
       where: {
         id: id
@@ -39,22 +39,23 @@ if (error || !user) {
       data: buyer
     });
   } catch (err) {
+    console.log(err)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   const supabase = await createServerSupaBaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+   const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (!session?.user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
-  }
+if (error || !user) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+}
 
   const rawData = await req.json();
   const { searchParams } = new URL(req.url);
   const buyer_id = searchParams.get('id');
-  // console.log("rawData",data)
+  console.log("rawData",rawData)
 
   if (!buyer_id) {
     return NextResponse.json({ message: "Need Proper Id" });
@@ -64,13 +65,13 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Buyer not found" }, { status: 404 });
   }
 
-  if (buyer.ownerId !== session.user.id) {
+  if (buyer.ownerId !== user.id) {
     return new Response(
       JSON.stringify({ error: "You are not allowed to edit this record" }),
       { status: 403 }
     )
   }
-
+console.log(new Date(rawData.updatedAt).getTime(), buyer.updatedAt.getTime())
   if (new Date(rawData.updatedAt).getTime() !== buyer.updatedAt.getTime()) {
     return NextResponse.json(
       { error: "Record changed, please refresh" },

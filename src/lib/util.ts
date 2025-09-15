@@ -37,7 +37,7 @@ export function normalizeFormData(data: any) {
     ...data,
     budgetMin: data.budgetMin ? Number(data.budgetMin) : null,
     budgetMax: data.budgetMax ? Number(data.budgetMax) : null,
-    bhk: data.bhk === "" ? null : Number(data.bhk),
+    bhk: data.bhk === "" ? null : data.bhk,
     tags: typeof data.tags === "string" ? data.tags.split(",") : data.tags,
     updatedAt: data.updatedAt ? new Date(data.updatedAt) : new Date(),
   };

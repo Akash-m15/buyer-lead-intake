@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 if (error || !user) {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 }
-
+console.log("Inside endpoint get")
   const { searchParams } = new URL(req.url)
   const buyerId = searchParams.get("id")
   if (!buyerId) return NextResponse.json({ error: "Buyer ID required" }, { status: 400 })
@@ -31,11 +31,11 @@ if (error || !user) {
   }
 
   const history = await prisma.buyerHistory.findMany({
-    where: { id: buyerId },
+    where: {  buyerId },
     orderBy: { changedAt: "desc" },
     take: 5
   })
-
+  history.pop();
   console.log(history);
   // Map diff to readable format: field → old → new
   const formattedHistory = history.map((h, index) => {
