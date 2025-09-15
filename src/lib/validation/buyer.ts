@@ -6,11 +6,15 @@ export const buyerLeadSchema = z.object({
   phone: z.string().regex(/^\d{10,15}$/, "Phone must be numeric and 10–15 digits"),
   city: z.enum(['Chandigarh', 'Mohali', 'Zirakpur', 'Panchkula', 'Other']),
   propertyType: z.enum(['Apartment', 'Office', 'Villa', 'Plot', 'Retail']),
-  bhk: z.enum(['One', 'Two', 'Three', 'Four', 'Studio']).optional(),
+  bhk: z.enum(['One', 'Two', 'Three', 'Four', 'Studio']).nullable().optional(),
   purpose: z.enum(['Buy', 'Rent']),
   budgetMin: z.number().int().nonnegative().optional(),
   budgetMax: z.number().int().nonnegative().optional(),
   timeline: z.enum(["ZERO_TO_THREE", "THREE_TO_SIX", "MORE_THAN_SIX", "EXPLORING"]),
+  status : z.enum(["New","Qualified","Contacted",
+  "Visited",
+  "Negotiation",
+  "Converted","Dropped"]),
   source: z.enum(['Website','Referral','WalkIn','Call','Other']),
   notes: z.string().max(1000).optional(),
   tags: z.array(z.string()).optional(),
@@ -36,3 +40,5 @@ export const buyerSchemaWithRefinements = buyerLeadSchema.superRefine((data, ctx
   }
 });
 
+
+export type BuyerLeadType = z.infer<typeof buyerLeadSchema>;
