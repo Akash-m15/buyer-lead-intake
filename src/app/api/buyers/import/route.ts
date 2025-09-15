@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { parse } from "csv-parse/sync";
+import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 
 const VALID_CITIES = ["Chandigarh", "Mohali", "Zirakpur", "Panchkula", "Other"];
 const VALID_PROPERTY_TYPES = ["Apartment", "Villa", "Plot", "Office", "Retail"];
@@ -10,7 +11,26 @@ const VALID_SOURCES = ["Website", "Referral", "WalkIn", "Call", "Other"];
 const VALID_STATUS = ["New","Qualified","Contacted","Visited","Negotiation","Converted","Dropped"];
 const VALID_BHK = ["One","Two","Three","Four","Studio"]
 
+
+function getTimeline(timeLine : string)
+{
+  switch(timeLine)
+  {
+    case "0-3m" : return "ZERO_TO_THREE"
+    case "3-6m" : return "THREE_TO_SIX"
+    case ">6m" : return "MORE_THAN_SIX"
+    case "Exploring" : return "EXPLORING"
+  }
+}
+
 export async function POST(req: Request) {
+  
+    const supabase = await createServerSupaBaseClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const body = await req.text(); 
     console.log(body);
@@ -28,9 +48,10 @@ export async function POST(req: Request) {
     const validRows: any[] = [];
 
     records.forEach((row: any, idx: number) => {
-      const rowNum = idx + 2; // +2 since we have to start after header col
+      const rowNum = idx + 1; // +1 since we have to start after header col
       let rowErrors: string[] = [];
-
+      row.timeline = getTimeline(row.timeline)
+      // console.log(row.timeline)
       if (!row.fullName) rowErrors.push("Full Name is required");
       if (!row.phone) rowErrors.push("Phone is required");
       if (row.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
@@ -65,6 +86,7 @@ export async function POST(req: Request) {
           notes: row.notes || null,
           tags: row.tags ? row.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
           status: row.status,
+          ownerId : user.id
         });
       }
     });
@@ -75,7 +97,7 @@ export async function POST(req: Request) {
         validRows.map((row) => prisma.buyer.create({ data: row }))
       );
     }
-
+      console.log(validRows)
     return NextResponse.json({ inserted: validRows.length, errors });
   } catch (err) {
     console.error(err);

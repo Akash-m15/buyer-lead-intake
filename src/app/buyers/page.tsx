@@ -74,20 +74,20 @@ export default function BuyerLeadsPage() {
 
       const headers =
         "fullName,email,phone,city,propertyType,bhk,purpose,budgetMin,budgetMax,timeline,source,notes,tags,status\n";
-
+      
       const rows = buyersData
         .map((b: any) =>
           [
             b.fullName,
             b.email ?? "",
-            b.phone ?? "",
+            (b.phone) ?? "",
             b.city,
             b.propertyType,
             b.bhk ?? "",
             b.purpose,
             b.budgetMin ?? "",
             b.budgetMax ?? "",
-            b.timeline,
+            formatTimeline(b.timeline),
             b.source,
             b.notes ?? "",
             (b.tags || []).join(","),
@@ -97,7 +97,6 @@ export default function BuyerLeadsPage() {
             .join(",")
         )
         .join("\n");
-
       const csvContent = headers + rows;
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
@@ -132,12 +131,14 @@ export default function BuyerLeadsPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-6 py-4 shadow-sm border-b border-gray-200">
         <h1 className="text-xl font-bold">Lead-System</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <Link
             href="/create_lead"
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
-          >
-            Create Lead
+            className="rounded-md w-30  bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+          > <span className="ml-2"  >Create Lead</span>
+          </Link>
+          <Link href="/fileUpload"  className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+          >Import
           </Link>
           <LogoutButton />
         </div>
