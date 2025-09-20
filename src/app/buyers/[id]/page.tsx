@@ -3,7 +3,7 @@ import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 import BuyerWrapper from "@/components/BuyerWrapper";
 
 
-export default async function getBuyerData({ params }:  { params: { id: string } }) {
+export default async function getBuyerData({ params }) {
   try {
     const supabase = await createServerSupaBaseClient();
     const {
