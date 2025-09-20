@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { prisma } from "@/lib/db"
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer"
 import { JsonValue } from "@prisma/client/runtime/library"

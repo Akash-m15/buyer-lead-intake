@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { BuyerLeadType, buyerSchemaWithRefinements } from "@/lib/zod/buyer";
+import { buyerSchemaWithRefinements } from "@/lib/zod/buyer";
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 
 
