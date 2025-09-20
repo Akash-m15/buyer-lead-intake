@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     records.forEach((row: any, idx: number) => {
       const rowNum = idx + 1; // +1 since we have to start after header col
-      let rowErrors: string[] = [];
+      const rowErrors: string[] = [];
       row.timeline = getTimeline(row.timeline)
 
       // console.log(row.timeline)

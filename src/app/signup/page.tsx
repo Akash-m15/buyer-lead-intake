@@ -43,7 +43,7 @@ export default function SignUpForm() {
             Welcome 
           </h1>
           <p className="text-gray-800 italic text-lg mb-4">
-            "Manage your buyer leads efficiently and effortlessly. Our system helps you track, organize, and convert leads into happy homeowners."
+            Manage your buyer leads efficiently and effortlessly. Our system helps you track, organize, and convert leads into happy homeowners.
           </p>
           <p className="text-gray-700 text-base">
             Sign up to get started.
