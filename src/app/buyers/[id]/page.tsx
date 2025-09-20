@@ -1,9 +1,5 @@
-import axios from "axios";
-import BuyerClientComponent from "@/components/BuyerClientComponent";
-import BuyerHistory from "../../../components/BuyerHistory";
 import { prisma } from "@/lib/db";
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
-import { redirect, useRouter } from "next/navigation";
 import BuyerWrapper from "@/components/BuyerWrapper";
 
 export default async function getBuyerData({

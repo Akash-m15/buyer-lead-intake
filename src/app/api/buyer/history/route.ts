@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db"
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer"
+import { JsonValue } from "@prisma/client/runtime/library"
 import { NextRequest, NextResponse } from "next/server"
 
 type BuyerHistoryEntry = {
   changedBy: string
   changedAt: Date
-  diff: Record<string, { old: any; new: any }> | Record<string, any> | null
+  diff: JsonValue
 }
 
 
@@ -30,13 +31,13 @@ console.log("Inside endpoint get")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const history = await prisma.buyerHistory.findMany({
+  const history : BuyerHistoryEntry[] = await prisma.buyerHistory.findMany({
     where: {  buyerId },
     orderBy: { changedAt: "desc" },
     take: 5
   })
   history.pop();
-  console.log(history);
+  // console.log(history);
   // Map diff to readable format: field → old → new
   const formattedHistory = history.map((h, index) => {
     if (!h.diff || typeof h.diff !== "object" || Array.isArray(h.diff)) return null;
@@ -61,3 +62,8 @@ console.log("Inside endpoint get")
 
   return NextResponse.json({ success: true, data: formattedHistory })
 }
+
+
+export const config = {
+  runtime: "nodejs",
+};

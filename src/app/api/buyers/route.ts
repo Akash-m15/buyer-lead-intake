@@ -17,19 +17,23 @@ import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 
 
 export async function POST(req: NextRequest) {
+
   const supabase = await createServerSupaBaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
 
   if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
   const data = await req.json();
-  console.log("Data",data)
+  // console.log("Data", data)
   const validData = await buyerSchemaWithRefinements.safeParseAsync(data);
+  
   if (!validData.success) {
     console.log(validData.error);
     return NextResponse.json({ error: validData.error }, { status: 400 });
   }
+
   const existingLead = await prisma.buyer.findFirst({
     where: {
       OR: [
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
       })
       return createdLead;
     });
-    return NextResponse.json({ message: "Buyer lead created successfully" }, { status: 201 });
+    return NextResponse.json({ message: "Buyer lead created successfully",data:buyer }, { status: 201 });
   }
   catch (err) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -106,8 +110,8 @@ export async function GET(req: NextRequest) {
       propertyTypes.length > 0 ? { propertyType: { in: propertyTypes } } : {}
       ]
     },
-    skip: exportAll? undefined : (page - 1) * pageSize,
-    take: exportAll? undefined : pageSize,
+    skip: exportAll ? undefined : (page - 1) * pageSize,
+    take: exportAll ? undefined : pageSize,
     orderBy: { updatedAt: 'desc' }
   });
 
@@ -147,3 +151,7 @@ export async function GET(req: NextRequest) {
 //   }
 //   return total;
 // }
+
+export const config = {
+  runtime: "nodejs",
+};
