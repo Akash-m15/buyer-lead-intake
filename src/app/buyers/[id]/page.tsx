@@ -2,11 +2,8 @@ import { prisma } from "@/lib/db";
 import { createServerSupaBaseClient } from "@/lib/supabase/supabaseServer";
 import BuyerWrapper from "@/components/BuyerWrapper";
 
-type PageProps = {
-  params: { id: string };
-};
 
-export default async function getBuyerData({ params }: PageProps) {
+export default async function getBuyerData({ params }:  { params: { id: string } }) {
   try {
     const supabase = await createServerSupaBaseClient();
     const {
