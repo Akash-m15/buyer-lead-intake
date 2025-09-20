@@ -1,4 +1,4 @@
-import z, { property } from 'zod';
+import z  from 'zod';
 
 export const buyerLeadSchema = z.object({
   fullName: z.string().min(2, { message: 'Full name must be at least 2 characters long' }).max(80, { message: 'Full name must be at most 80 characters long' }),

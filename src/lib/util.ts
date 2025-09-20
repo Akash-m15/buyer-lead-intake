@@ -1,4 +1,4 @@
-// lib/utils.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function getDiffs(
   oldData: Record<string, any>,
   newData: Record<string, any>,
